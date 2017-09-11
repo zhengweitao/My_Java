@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:cache="http://www.springframework.org/schema/cache"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context  
+      	http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/cache 
+        http://www.springframework.org/schema/cache/spring-cache.xsd">
+	 <!-- 启动注解驱动的Spring MVC功能，注册请求url和注解POJO类方法的映射--> 
+    
+ 	<!-- 启动包扫描功能，以便注册带有@Controller、@Service、@repository、@Component等注解的类成为spring的bean -->  
+    <context:component-scan base-package="com.mvc.victor" /> 
+    
+    <!-- 启用缓存注解功能，这个是必须的，否则注解不会生效，另外，该注解一定要声明在spring主配置文件中才会生效 -->    
+    <cache:annotation-driven cache-manager="cacheManager" />    
+    
+    <!-- 引入配置文件 --> 
+    <!-- <bean id="propertyConfigurer"  
+        class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">  
+        <property name="location" value="classpath:redis.properties" />  
+    </bean> 
+     -->
+ 
+     
+   <!-- redis 相关配置 -->    
+     <bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">    
+         <property name="maxIdle" value="${redis.maxIdle}" />     
+         <property name="maxWaitMillis" value="${redis.maxWaitMillis}" />  
+         <property name="maxTotal" value="${redis.maxTotal}" />
+         <property name="testOnBorrow" value="${redis.testOnBorrow}" />
+         <property name="testOnReturn" value="${redis.testOnReturn}" />
+     </bean>    
+  
+     <bean id="JedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"    
+       p:host-name="${redis.host}" p:port="${redis.port}" p:password="${redis.auth}" p:timeout="${redis.timeOut}" 
+       p:pool-config-ref="poolConfig" p:database="0" p:use-pool="true"/>    
+    
+     <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">    
+         <property name="connectionFactory" ref="JedisConnectionFactory" />    
+     </bean>
+     
+      <bean id="cacheManager" class="org.springframework.data.redis.cache.RedisCacheManager">    
+         <constructor-arg ref="redisTemplate"></constructor-arg>
+    </bean>
+    
+      <!-- spring自己的缓存管理器，这里定义了缓存位置名称 ，即注解中的value -->    
+<!--      <bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager">    
+         <property name="caches">    
+            <set>    
+                这里可以配置多个redis  
+                <bean class="com.cn.util.RedisCache">    
+                     <property name="redisTemplate" ref="redisTemplate" />    
+                     <property name="name" value="default"/>    
+                </bean>    
+                <bean class="com.cn.util.RedisCache">    
+                     <property name="redisTemplate" ref="redisTemplate" />    
+                     <property name="name" value="common"/>    
+                     common名称要在类或方法的注解中使用  
+                </bean>  
+            </set>    
+         </property>    
+     </bean>     --> 
+   
+</beans>
